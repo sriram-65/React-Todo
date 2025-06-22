@@ -1,54 +1,56 @@
-import React, { useState , useEffect } from 'react'
+import React, { useState } from 'react';
 
-const Ch5 = () => {
-  const [Todo , setTodo] = useState([])
-  const [inp , setInputs] = useState()
+const Proj = () => {
+  const [city, setCity] = useState('');
+  const [weather, setWeather] = useState(null);
+  const [error, setError] = useState('');
 
-  const handleClick = ()=>{
-    setTodo([...Todo , {id:new Date() , Data:inp , Done:false }])
-  }
+  const handleChange = (e) => {
+    setCity(e.target.value);
+  };
 
+  const handleClick = async () => {
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=cf058425f2ac68c49a8643444ba2b2fc`
+      );
+      if (!response.ok) {
+        throw new Error('City not found!');
+      }
 
-  const HandleDelete =  (id) =>{
-        setTodo(Todo.filter((Tid)=>Tid.id !== id))
-  }
-
-  const HandleEdit = (id) =>{
-    const NewData = prompt("Enter new Data")
-
-    if(NewData.trim()){
-     setTodo(Todo.map(todo=>(
-      todo.id == id?{...todo , Data:NewData } : todo
-    )))
-
+      const data = await response.json();
+      setWeather(data);
+      setError('');
+    } catch (err) {
+      setWeather(null);
+      setError(err.message);
     }
- 
-  }
-
-  const handleDone = (id) =>{
-    setTodo(Todo.map(todo =>(
-          todo.id == id ? {...todo , Done:!todo.Done} : todo
-        )))
-  }
+  };
 
   return (
-    <>
-    <input type="text" placeholder='Enter Your Todos' onChange={(e)=>setInputs(e.target.value)}/>
-    <button onClick={handleClick}>Add Todo</button>
+    <div style={{ padding: '20px', fontFamily: 'Arial' , width:"100%" , height:"100vh" , display:"flex" , justifyContent:"center" , alignItems:"center" , flexDirection:"column" }}>
+      <h2>🌤 Weather</h2>
+      <input
+        type="text"
+        placeholder="Enter city name"
+        onChange={handleChange}
+        value={city}
+      />
+      <button onClick={handleClick}>Get City Weather</button>
 
-    {Todo.length==0?(
-      <h1> You Don't Have any Todos </h1>
-    ) : (Array.from(Todo).map(todos =>(
-       <div key={todos.id}>
-         <p style={{textDecoration:todos.Done?"line-through":"none"}}>{todos.Data}</p>
-         <button onClick={()=>HandleDelete(todos.id)}>Delete</button>
-         <button onClick={() => HandleEdit(todos.id)}>Edit</button>
-         <button onClick={()=>handleDone(todos.id)}> {todos.Done?"Not Done":"Done"}</button>
-       </div>
-    )))}
- 
-    </>
-  )
-}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
 
-export default Ch5
+      {weather && (
+        <div style={{ marginTop: '20px' }}>
+          <h3>{weather.name}, {weather.sys.country}</h3>
+          <p>🌡 Temperature: {weather.main.temp}°C</p>
+          <p>🌥 Weather: {weather.weather[0].main}</p>
+          <p>💧 Humidity: {weather.main.humidity}%</p>
+          <p>🌬 Wind Speed: {weather.wind.speed} m/s</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Proj;
